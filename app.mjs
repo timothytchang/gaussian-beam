@@ -1,6 +1,53 @@
 import { validateConfig, trace, at, fitBeam, matchWaist } from "./optics.mjs";
 const $ = (id) => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
+
+// Approximate spectral hues, using Bruton's visible-wavelength breakpoints:
+// https://www.physics.sfasu.edu/astro/color/spectra.html
+// This is a display convention, not colorimetry or an optical-power model.
+function beamColor(wavelength) {
+  if (wavelength < 380 || wavelength > 780) {
+    return {
+      rgb: [100, 105, 110],
+      fill: "rgb(100, 105, 110)",
+      stroke: "rgb(75, 79, 83)",
+      region: wavelength < 380 ? "Ultraviolet" : "Infrared",
+    };
+  }
+  const anchors = [
+    [380, 1, 0, 1],
+    [440, 0, 0, 1],
+    [490, 0, 1, 1],
+    [510, 0, 1, 0],
+    [580, 1, 1, 0],
+    [645, 1, 0, 0],
+    [780, 1, 0, 0],
+  ];
+  const upper = anchors.findIndex(
+    (entry, i) => i > 0 && wavelength <= entry[0],
+  );
+  const a = anchors[upper - 1],
+    b = anchors[upper];
+  const t = (wavelength - a[0]) / (b[0] - a[0]);
+  const edge =
+    wavelength < 420
+      ? 0.3 + (0.7 * (wavelength - 380)) / 40
+      : wavelength > 700
+        ? 0.3 + (0.7 * (780 - wavelength)) / 80
+        : 1;
+  const rgb = a
+    .slice(1)
+    .map((channel, i) =>
+      Math.round(255 * ((channel + (b[i + 1] - channel) * t) * edge) ** 0.8),
+    );
+  return {
+    rgb,
+    fill: `rgb(${rgb.join(", ")})`,
+    // Darken the outlines so green and yellow remain legible on paper.
+    stroke: `rgb(${rgb.map((channel) => Math.round(channel * 0.45)).join(", ")})`,
+    region: "",
+  };
+}
 const types = {
   lens: "Thin lens",
   cylindrical: "Cylindrical lens",
@@ -342,6 +389,11 @@ function svgEl(tag, attrs = {}, text) {
 let plotScale;
 function drawPlot() {
   const svg = $("plot");
+  const color = beamColor(state.wavelengthNm);
+  document.documentElement.style.setProperty("--x", color.stroke);
+  document.documentElement.style.setProperty("--y", color.stroke);
+  $("spectrum-label").textContent = color.region;
+  $("spectrum-label").hidden = !color.region;
   const width = Math.max(280, $("plot-wrap").clientWidth),
     height = $("plot-wrap").clientHeight;
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -371,17 +423,17 @@ function drawPlot() {
   gradient.append(
     svgEl("stop", {
       offset: "0%",
-      "stop-color": "#975c3e",
+      "stop-color": color.fill,
       "stop-opacity": 0.08,
     }),
     svgEl("stop", {
       offset: "50%",
-      "stop-color": "#975c3e",
+      "stop-color": color.fill,
       "stop-opacity": 0.27,
     }),
     svgEl("stop", {
       offset: "100%",
-      "stop-color": "#975c3e",
+      "stop-color": color.fill,
       "stop-opacity": 0.08,
     }),
   );
@@ -465,9 +517,9 @@ function drawPlot() {
     })
     .filter(Boolean);
   for (const pts of paths) {
-    for (const [axis, color, dash] of [
-      ["wX", "#905230", ""],
-      ["wY", "#27666a", "6 4"],
+    for (const [axis, stroke, dash] of [
+      ["wX", color.stroke, ""],
+      ["wY", color.stroke, "6 4"],
     ]) {
       for (const sign of [1, -1]) {
         const d = pts
@@ -477,7 +529,7 @@ function drawPlot() {
           svgEl("path", {
             d,
             fill: "none",
-            stroke: color,
+            stroke,
             "stroke-width": 1.8,
             "stroke-dasharray": dash,
           }),
@@ -604,6 +656,7 @@ function pair(a, b, unit) {
 }
 function readout() {
   const r = at(state, probe);
+  const color = beamColor(state.wavelengthNm);
   $("probe").value = Number(probe.toFixed(3));
   $("probe").max = state.end;
   $("probe-range").max = state.end;
@@ -630,9 +683,9 @@ function readout() {
         yy = ((y - h / 2) / (h / 2)) * extent;
       const t = Math.exp(-2 * ((xx * xx) / r.wX ** 2 + (yy * yy) / r.wY ** 2));
       const i = (y * w + x) * 4;
-      image.data[i] = Math.round(244 + (151 - 244) * t);
-      image.data[i + 1] = Math.round(243 + (92 - 243) * t);
-      image.data[i + 2] = Math.round(239 + (62 - 239) * t);
+      image.data[i] = Math.round(244 + (color.rgb[0] - 244) * t);
+      image.data[i + 1] = Math.round(243 + (color.rgb[1] - 243) * t);
+      image.data[i + 2] = Math.round(239 + (color.rgb[2] - 239) * t);
       image.data[i + 3] = 255;
     }
   ctx.putImageData(image, 0, 0);
@@ -1013,11 +1066,24 @@ $("match-apply").onclick = () => {
     setProbe($("target-z").valueAsNumber);
   }
 };
+document.addEventListener("keydown", (event) => {
+  if (
+    event.key === "Enter" &&
+    event.target.matches(
+      'input[type="number"], input[type="text"], input:not([type])',
+    )
+  ) {
+    // Blur commits native change events and removes the focus outline.
+    // Leave textarea newlines and normal form submission unchanged.
+    event.target.blur();
+  }
+});
 window.addEventListener("hashchange", () => {
   if (!location.hash) return;
   try {
     const encoded = location.hash.slice(1);
-    if (encoded.length > 150000) throw Error("Shared configuration is too large.");
+    if (encoded.length > 150000)
+      throw Error("Shared configuration is too large.");
     commit(JSON.parse(decodeURIComponent(encoded)), { resetView: true });
   } catch (error) {
     message("Cannot open shared configuration: " + error.message, true);

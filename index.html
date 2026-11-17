@@ -11,7 +11,7 @@
     <title>Gaussian Beam</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./style.css" />
-    <script type="module" src="./app.mjs"></script>
+    <script type="module" src="./app.mjs?v=20261117-2"></script>
   </head>
   <body>
     <header>
@@ -81,6 +81,11 @@
         <div class="section-head">
           <h2 id="plot-title">Beam envelope</h2>
           <div class="plot-toolbar">
+            <span
+              id="spectrum-label"
+              title="Outside the displayed visible range; shown in gray."
+              hidden
+            ></span>
             <span class="legend x">x radius</span
             ><span class="legend y">y radius</span
             ><button id="zoom-in" aria-label="Zoom in along beam">＋</button
@@ -279,6 +284,11 @@
         ignoring subsequent optics. They can lie outside that segment. The cross
         section shows peak-normalized intensity; it does not estimate
         transmitted power.
+      </p>
+      <p>
+        Beam colors approximate wavelengths from 380 to 780 nm. Ultraviolet and
+        infrared beams use gray. Color does not indicate beam power; x and y use
+        solid and dashed outlines.
       </p>
       <p>
         The model excludes apertures, clipping, aberrations, nonparaxial

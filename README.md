@@ -8,6 +8,7 @@ A static Gaussian optics workbench for GitHub Pages. All propagation, fitting, w
 - Thin and cylindrical lenses, normal-incidence curved mirrors, flat mirrors, planar and curved refractive interfaces, dielectric slabs, and real ABCD matrices.
 - Draggable optical elements, keyboard position adjustment, numerical editors, element disabling, duplication, and undo/redo.
 - Beam envelopes, a movable probe, local waist and curvature readouts, and a peak-normalized transverse intensity image.
+- Wavelength-dependent display colors for 380–780 nm, with labeled gray rendering outside that range. Enter commits a text or numeric field and removes focus.
 - Measurement fitting with a fixed wavelength and M²; bounded position optimization for up to two thin lenses toward a circular waist.
 - Local autosave, JSON configuration import/export, configuration links, SVG plot export, and sampled CSV export.
 
@@ -44,3 +45,5 @@ The tests cover analytic free propagation, lens transforms, refraction, finite s
 ## Typography and licensing
 
 The interface uses Helvetica with Arial and generic sans-serif fallbacks. The available Neue Montreal files were demo/trial assets; they are not redistributed in this public repository. The implementation uses the MIT license. No third-party source code, fonts, or artwork are bundled.
+
+The spectral display uses an original interpolation implementation with the wavelength breakpoints from [Dan Bruton's approximate RGB spectrum](https://www.physics.sfasu.edu/astro/color/spectra.html). Outline colors are darkened for contrast. This display convention does not provide calibrated colorimetry.
