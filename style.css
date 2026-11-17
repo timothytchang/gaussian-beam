@@ -1,0 +1,613 @@
+:root {
+  color-scheme: light;
+  --bg: #e5e4e0;
+  --paper: #f4f3ef;
+  --ink: #1d1d1d;
+  --muted: #565851;
+  --rule: #b7b7b0;
+  --accent: #975c3e;
+  --x: #905230;
+  --y: #27666a;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--bg);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button,
+select {
+  cursor: pointer;
+}
+button {
+  border: 1px solid var(--rule);
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 3px;
+  min-height: 36px;
+}
+button:hover {
+  background: #deddd7;
+  border-color: var(--muted);
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+button.primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+button.primary:hover {
+  background: #393b35;
+}
+input,
+select,
+textarea {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 8px 9px;
+  min-width: 0;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+input:invalid {
+  border-color: #b43828;
+}
+input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}
+input[type="range"] {
+  accent-color: var(--accent);
+  padding: 0;
+  background: none;
+  border: 0;
+}
+input:disabled {
+  opacity: 0.55;
+}
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+textarea:focus-visible,
+svg [tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+header {
+  max-width: 1600px;
+  margin: auto;
+  padding: 28px 36px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0;
+}
+h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+nav,
+.inline-actions,
+.plot-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--rule);
+  margin: 0 6px;
+}
+main {
+  max-width: 1600px;
+  margin: auto;
+  padding: 0 36px 48px;
+}
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.section-head select {
+  width: auto;
+  max-width: 100%;
+}
+.beam-input {
+  border-top: 1px solid var(--rule);
+  padding: 22px 0 18px;
+}
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 16px;
+}
+label {
+  display: block;
+  font-size: 14px;
+  line-height: 1.4;
+}
+label > input,
+label > select,
+label > textarea {
+  display: block;
+  margin-top: 7px;
+}
+label span,
+.probe-bar span {
+  color: var(--muted);
+}
+.beam-input > .inline-actions {
+  margin-top: 16px;
+  gap: 20px;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.check > input {
+  margin: 0;
+}
+.plot-panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 22px 24px 0;
+  border-radius: 4px;
+}
+.plot-toolbar {
+  font-size: 14px;
+}
+.legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 12px;
+  white-space: nowrap;
+}
+.legend:before {
+  content: "";
+  width: 20px;
+  border-top: 2px solid var(--x);
+}
+.legend.y:before {
+  border-top: 2px dashed var(--y);
+}
+#plot-wrap {
+  width: 100%;
+  height: 380px;
+  position: relative;
+  touch-action: pan-y;
+}
+#plot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  user-select: none;
+}
+#plot text {
+  font-family: Helvetica, Arial, sans-serif;
+  fill: var(--muted);
+  font-size: 12px;
+}
+#plot .optic {
+  cursor: ew-resize;
+  touch-action: none;
+}
+#plot .optic:hover .optic-line,
+#plot .optic:focus .optic-line {
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+.probe-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-top: 1px solid #d3d3cc;
+  padding: 16px 0;
+  font-size: 14px;
+}
+.probe-bar label {
+  white-space: nowrap;
+}
+#probe {
+  width: 110px;
+}
+#probe-range {
+  flex: 1;
+}
+#medium {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.readout {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) 180px;
+  border-top: 1px solid #d3d3cc;
+  gap: 20px;
+  align-items: center;
+  min-height: 138px;
+  padding: 12px 0;
+}
+.readout > div > span {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.readout strong {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+  display: block;
+}
+.readout .spot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+#spot {
+  max-width: 100%;
+  height: 85px;
+  object-fit: contain;
+}
+.readout .spot span {
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+.bench-panel {
+  margin-top: 30px;
+}
+.element {
+  display: grid;
+  grid-template-columns: 28px 150px 140px 110px 1fr 82px;
+  gap: 14px;
+  align-items: start;
+  border-top: 1px solid var(--rule);
+  padding: 16px 0;
+}
+.element > .check {
+  padding-top: 31px;
+}
+.element .element-kind {
+  padding-top: 31px;
+  font-size: 14px;
+}
+.element-fields {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.element-fields label {
+  flex: 1;
+  min-width: 90px;
+  max-width: 150px;
+}
+.element-actions {
+  display: flex;
+  gap: 6px;
+  padding-top: 27px;
+}
+.element-actions button {
+  padding: 7px 10px;
+}
+.empty {
+  padding: 28px;
+  border: 1px dashed var(--rule);
+  color: var(--muted);
+}
+#message {
+  min-height: 22px;
+  font-size: 14px;
+  color: #8e3527;
+  padding: 0 0 8px;
+}
+dialog {
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  background: var(--paper);
+  color: var(--ink);
+  width: 560px;
+  max-width: calc(100vw - 32px);
+  max-height: 90vh;
+  padding: 24px;
+  box-shadow: 0 16px 70px #0003;
+}
+dialog::backdrop {
+  background: #1d1d1d55;
+}
+dialog p {
+  font-size: 15px;
+  line-height: 1.55;
+}
+dialog .section-head {
+  margin-bottom: 12px;
+}
+dialog .section-head button {
+  font-size: 22px;
+  line-height: 1;
+  min-width: 36px;
+  padding: 5px;
+}
+dialog a {
+  color: #7c452d;
+}
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 18px 0;
+}
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+fieldset {
+  border: 1px solid var(--rule);
+  padding: 14px;
+  margin: 18px 0;
+}
+fieldset label {
+  margin: 8px 0;
+}
+textarea {
+  resize: vertical;
+  font-family: monospace;
+}
+#fit-result,
+#match-result {
+  color: #703d29;
+  min-height: 24px;
+}
+#help-dialog {
+  width: 620px;
+}
+noscript {
+  display: block;
+  padding: 30px;
+}
+@media (min-width: 1500px) {
+  #plot-wrap {
+    height: 440px;
+  }
+}
+@media (max-width: 1100px) {
+  .input-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .readout {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .readout .spot {
+    grid-column: 1/-1;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: center;
+  }
+  .element {
+    grid-template-columns: 25px 120px 120px 100px 1fr 76px;
+    gap: 10px;
+  }
+  .element-fields label {
+    max-width: none;
+    min-width: 75px;
+  }
+}
+@media (max-width: 780px) {
+  header {
+    padding: 22px 20px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+  main {
+    padding: 0 20px 32px;
+  }
+  .plot-panel {
+    padding: 18px 14px 0;
+  }
+  .section-head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .input-grid {
+    gap: 12px;
+  }
+  #plot-wrap {
+    height: 320px;
+  }
+  .readout {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 18px 0;
+  }
+  .element {
+    grid-template-columns: 24px 1fr 1fr 82px;
+  }
+  .element .element-kind {
+    grid-column: 2;
+    grid-row: 2;
+    padding-top: 0;
+    align-self: center;
+  }
+  .element-fields {
+    grid-column: 3/5;
+  }
+  .element-actions {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .element > .position {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .probe-bar {
+    flex-wrap: wrap;
+  }
+  #probe-range {
+    order: 4;
+    flex-basis: 100%;
+  }
+  #medium {
+    margin-left: auto;
+  }
+  .element-fields label {
+    min-width: 70px;
+  }
+  .plot-toolbar {
+    gap: 6px;
+  }
+  .plot-toolbar button {
+    padding: 6px 9px;
+  }
+  .legend {
+    margin-right: 5px;
+  }
+}
+@media (max-width: 480px) {
+  header {
+    padding: 20px 14px;
+  }
+  h1 {
+    font-size: 26px;
+  }
+  main {
+    padding: 0 14px 24px;
+  }
+  nav {
+    gap: 6px;
+  }
+  nav button {
+    padding: 7px 9px;
+    font-size: 14px;
+  }
+  .divider {
+    display: none;
+  }
+  .input-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  input,
+  select {
+    font-size: 16px;
+  }
+  .beam-input > .inline-actions {
+    gap: 10px;
+  }
+  .inline-actions button {
+    font-size: 14px;
+  }
+  .plot-panel {
+    padding: 16px 8px 0;
+  }
+  .plot-toolbar {
+    width: 100%;
+  }
+  .legend {
+    font-size: 12px;
+  }
+  .plot-toolbar button {
+    font-size: 13px;
+    padding: 5px 7px;
+  }
+  #plot-wrap {
+    height: 280px;
+  }
+  .readout strong {
+    font-size: 14px;
+  }
+  .readout > div > span {
+    font-size: 12px;
+  }
+  .probe-bar {
+    gap: 8px;
+  }
+  .probe-bar label {
+    font-size: 13px;
+  }
+  #probe {
+    width: 88px;
+  }
+  #medium {
+    font-size: 12px;
+  }
+  .element {
+    grid-template-columns: 22px 1fr 88px 74px;
+    gap: 8px;
+  }
+  .element .name {
+    grid-column: 2/4;
+  }
+  .element > .position {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .element .element-kind {
+    grid-row: 3;
+    grid-column: 2/5;
+  }
+  .element-fields {
+    grid-row: 2;
+    grid-column: 3/5;
+  }
+  .element > .check {
+    padding-top: 30px;
+  }
+  .element-fields label {
+    font-size: 12px;
+  }
+  .element-actions {
+    gap: 4px;
+  }
+  .element-actions button {
+    padding: 6px 8px;
+  }
+  .bench-panel > .section-head > .inline-actions {
+    width: 100%;
+  }
+  .bench-panel select {
+    flex: 1;
+    min-width: 0;
+  }
+  dialog {
+    padding: 18px;
+  }
+  .two-columns {
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}

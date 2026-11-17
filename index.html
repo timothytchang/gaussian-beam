@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Gaussian beam propagation through lenses, mirrors and interfaces. A self-contained optical bench that runs in your browser."
+    />
+    <meta name="theme-color" content="#e5e4e0" />
+    <title>Gaussian Beam</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./app.mjs"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Gaussian Beam</h1>
+      <nav aria-label="Configuration">
+        <button id="undo" title="Undo (Ctrl/⌘ Z)">Undo</button
+        ><button id="redo" title="Redo (Ctrl/⌘ Shift Z)">Redo</button
+        ><span class="divider"></span><button id="load">Open</button
+        ><button id="save">Save</button><button id="share">Copy link</button
+        ><button id="help">Model</button>
+      </nav>
+    </header>
+    <main>
+      <section class="beam-input" aria-labelledby="input-title">
+        <div class="section-head">
+          <h2 id="input-title">Input beam</h2>
+          <select id="preset" aria-label="Load example">
+            <option value="">Examples…</option>
+            <option value="focus">Single lens</option>
+            <option value="free">Free propagation</option>
+            <option value="telescope">Beam expander</option>
+            <option value="cylindrical">Cylindrical focus</option>
+          </select>
+        </div>
+        <div class="input-grid">
+          <label
+            >Wavelength <span>nm</span
+            ><input id="wavelengthNm" type="number" min="1" step="any" /></label
+          ><label
+            >Beam quality M²<input
+              id="m2"
+              type="number"
+              min="1"
+              step="any" /></label
+          ><label
+            >Input index n<input
+              id="n"
+              type="number"
+              min="0.01"
+              step="any" /></label
+          ><label
+            >Bench length <span>mm</span
+            ><input id="end" type="number" min="1" step="any" /></label
+          ><label
+            >Waist radius x <span>mm</span
+            ><input id="wx" type="number" min="0.000001" step="any" /></label
+          ><label
+            >Waist position x <span>mm</span
+            ><input id="zx" type="number" step="any" /></label
+          ><label
+            >Waist radius y <span>mm</span
+            ><input id="wy" type="number" min="0.000001" step="any" /></label
+          ><label
+            >Waist position y <span>mm</span
+            ><input id="zy" type="number" step="any"
+          /></label>
+        </div>
+        <div class="inline-actions">
+          <label class="check"
+            ><input id="circular" type="checkbox" /> Circular input</label
+          ><button id="fit-open">Fit measurements</button
+          ><button id="match-open">Match a waist</button>
+        </div>
+      </section>
+      <div id="message" role="status" aria-live="polite"></div>
+      <section class="plot-panel" aria-labelledby="plot-title">
+        <div class="section-head">
+          <h2 id="plot-title">Beam envelope</h2>
+          <div class="plot-toolbar">
+            <span class="legend x">x radius</span
+            ><span class="legend y">y radius</span
+            ><button id="zoom-in" aria-label="Zoom in along beam">＋</button
+            ><button id="zoom-out" aria-label="Zoom out along beam">−</button
+            ><button id="view-reset">Fit view</button
+            ><button id="export-svg">SVG</button
+            ><button id="export-csv">CSV</button>
+          </div>
+        </div>
+        <div id="plot-wrap">
+          <svg
+            id="plot"
+            role="img"
+            aria-label="Gaussian beam envelope and draggable optical elements"
+          ></svg>
+        </div>
+        <div class="probe-bar">
+          <label for="probe">Probe position <span>mm</span></label
+          ><input type="number" id="probe" min="0" step="any" /><input
+            id="probe-range"
+            type="range"
+            min="0"
+            max="1000"
+            step="0.1"
+            aria-label="Probe position along bench"
+          /><span id="medium"></span>
+        </div>
+        <div class="readout">
+          <div><span>Beam radius</span><strong id="read-radius"></strong></div>
+          <div>
+            <span>Wavefront curvature</span
+            ><strong id="read-curvature"></strong>
+          </div>
+          <div>
+            <span>Local waist radius</span><strong id="read-waist"></strong>
+          </div>
+          <div>
+            <span>Local waist position</span><strong id="read-waist-z"></strong>
+          </div>
+          <div class="spot">
+            <canvas
+              id="spot"
+              width="180"
+              height="110"
+              aria-label="Normalized transverse intensity at probe"
+            ></canvas
+            ><span id="spot-label"></span>
+          </div>
+        </div>
+      </section>
+      <section class="bench-panel" aria-labelledby="bench-title">
+        <div class="section-head">
+          <h2 id="bench-title">Optical elements</h2>
+          <div class="inline-actions">
+            <select id="add-type" aria-label="Element type">
+              <option value="lens">Thin lens</option>
+              <option value="cylindrical">Cylindrical lens</option>
+              <option value="mirror">Curved mirror</option>
+              <option value="flat">Flat mirror</option>
+              <option value="interface">Refractive interface</option>
+              <option value="slab">Dielectric slab</option>
+              <option value="abcd">ABCD matrix</option></select
+            ><button id="add" class="primary">Add element</button>
+          </div>
+        </div>
+        <div id="elements"></div>
+      </section>
+    </main>
+    <input id="file-input" type="file" accept=".json,application/json" hidden />
+    <dialog id="fit-dialog">
+      <form id="fit-form">
+        <div class="section-head">
+          <h2>Fit input beam</h2>
+          <button type="button" data-close="fit-dialog" aria-label="Close">
+            ×
+          </button>
+        </div>
+        <p>
+          Enter one measurement per line: position in mm, then beam size in mm.
+          Use measurements from one uniform medium before any optics.
+        </p>
+        <div class="two-columns">
+          <label
+            >Size convention<select id="fit-kind">
+              <option value="radius">Radius w</option>
+              <option value="diameter">Diameter 2w</option>
+            </select></label
+          ><label
+            >Apply to<select id="fit-axis">
+              <option value="both">Both axes</option>
+              <option value="x">x axis</option>
+              <option value="y">y axis</option>
+            </select></label
+          >
+        </div>
+        <label
+          >Measurements<textarea
+            id="fit-data"
+            rows="7"
+            placeholder="0, 0.10&#10;50, 0.15&#10;100, 0.25"
+            required
+          ></textarea>
+        </label>
+        <p>
+          Wavelength, M² and input index use the current beam settings. At least
+          three distinct positions are required. For Gaussian beams, use the
+          1/e² radius; for non-Gaussian beams, use second-moment radius (D4σ/2).
+        </p>
+        <p id="fit-result" role="status"></p>
+        <div class="dialog-actions">
+          <button type="submit" class="primary">Fit beam</button
+          ><button type="button" id="fit-apply" disabled>Apply fit</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="match-dialog">
+      <form id="match-form">
+        <div class="section-head">
+          <h2>Match a waist</h2>
+          <button type="button" data-close="match-dialog" aria-label="Close">
+            ×
+          </button>
+        </div>
+        <p>
+          Move up to two thin lenses to approach a circular target waist. Focal
+          lengths remain fixed. The overlap metric assumes Gaussian profiles;
+          for M² &gt; 1 it compares envelopes, not measured coupling.
+        </p>
+        <div class="two-columns">
+          <label
+            >Target position <span>mm</span
+            ><input id="target-z" type="number" step="any" required /></label
+          ><label
+            >Target radius <span>mm</span
+            ><input
+              id="target-w"
+              type="number"
+              min="0.000001"
+              step="any"
+              value="0.05"
+              required
+          /></label>
+        </div>
+        <fieldset id="match-lenses"><legend>Lenses to move</legend></fieldset>
+        <div class="two-columns">
+          <label
+            >Minimum position <span>mm</span
+            ><input
+              id="match-min"
+              type="number"
+              step="any"
+              value="0"
+              required /></label
+          ><label
+            >Maximum position <span>mm</span
+            ><input id="match-max" type="number" step="any" required
+          /></label>
+        </div>
+        <p id="match-result" role="status"></p>
+        <div class="dialog-actions">
+          <button type="submit" class="primary">Find positions</button
+          ><button type="button" id="match-apply" disabled>
+            Apply positions
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="help-dialog">
+      <div class="section-head">
+        <h2>Model and conventions</h2>
+        <button data-close="help-dialog" aria-label="Close">×</button>
+      </div>
+      <p>
+        The envelope shows the beam radius in two independent transverse axes.
+        For Gaussian profiles this is the 1/e² intensity radius. Horizontal and
+        vertical plot scales differ.
+      </p>
+      <p>
+        Propagation uses the paraxial ABCD law, q′ = (Aq + B)/(Cq + D), with 1/q
+        = 1/R − i M²λ/(πnw²). Wavelength is the vacuum wavelength. All geometry
+        uses millimeters.
+      </p>
+      <p>
+        Positive focal length is converging. A mirror’s positive radius is
+        focusing; reflection unfolds into the forward bench axis. For a
+        refractive interface, positive radius has its center of curvature
+        downstream. Curved mirrors use normal incidence.
+      </p>
+      <p>
+        Drag an optic in the plot to move it, or edit its position below. Click
+        the plot to move the probe. Arrow keys on a focused optic move it by 1
+        mm; hold Shift for 10 mm.
+      </p>
+      <p>
+        Local waist values extrapolate within the probe’s current medium,
+        ignoring subsequent optics. They can lie outside that segment. The cross
+        section shows peak-normalized intensity; it does not estimate
+        transmitted power.
+      </p>
+      <p>
+        The model excludes apertures, clipping, aberrations, nonparaxial
+        focusing, diffraction from edges, polarization, and oblique astigmatism.
+        For M² &gt; 1 it propagates an effective second-moment envelope; the
+        displayed Gaussian intensity is illustrative.
+      </p>
+      <p>
+        Configurations stay in this browser. Save downloads a JSON file; Copy
+        link puts the configuration in the URL fragment. There are no remote
+        computations or external assets.
+      </p>
+      <p>
+        <a
+          href="https://www.rp-photonics.com/gaussian_beams.html"
+          target="_blank"
+          rel="noreferrer"
+          >Gaussian beam reference</a
+        >
+        ·
+        <a
+          href="https://www.rp-photonics.com/abcd_matrix.html"
+          target="_blank"
+          rel="noreferrer"
+          >ABCD reference</a
+        >
+        · <a href="./PHYSICS.md">Numerical checks</a>
+      </p>
+    </dialog>
+    <noscript
+      >This optical bench needs JavaScript enabled. All calculations run in your
+      browser.</noscript
+    >
+  </body>
+</html>
